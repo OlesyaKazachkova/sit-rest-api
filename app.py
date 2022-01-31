@@ -3,13 +3,15 @@ from flask_httpauth import HTTPBasicAuth
 from flask_sqlalchemy import SQLAlchemy
 from config import Configuration
 from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+import os
 
 app = Flask(__name__)
 app.config.from_object(Configuration)
 auth = HTTPBasicAuth()
 db = SQLAlchemy(app)
 
-# Initial commit 3
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -23,6 +25,17 @@ class Todo(db.Model):
     username = db.Column(db.String(64), db.ForeignKey('users.username'))
     task_name = db.Column(db.String(128), nullable=False)
     task_status = db.Column(db.Boolean(), default=False, nullable=False)
+
+
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+
+
+@app.route("/health/", methods=["GET"])
+def health():
+    return jsonify({
+        "env": os.environ['SERVER_ENV']
+    })
 
 
 @auth.verify_password
@@ -40,10 +53,10 @@ def index():
 
 
 # Создание пользователя
-@app.route('/user/add', methods=['POST'])
+@app.route('/user', methods=['POST'])
 def user():
     hashed_password = generate_password_hash(request.form['password'], method='sha256')
-    new_user = User(name=request.form['username'], password=hashed_password)
+    new_user = User(username=request.form['username'], password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
     return jsonify({'message': 'New user created!'})
