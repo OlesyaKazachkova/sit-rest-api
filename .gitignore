@@ -1,0 +1,8 @@
+.idea
+venv
+.env
+config.py
+todo.db
+__pycache__
+devenv
+prodenv
